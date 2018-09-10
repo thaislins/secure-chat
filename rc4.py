@@ -1,3 +1,6 @@
+key = "Key"
+message = "Plaintext"
+
 def ksa(key):
     S = [i for i in range(256)]
 
@@ -27,13 +30,12 @@ def key2ascii(char):
 def ascii2result(char):
     return [chr(c) for c in char]
 
-def run():
-    key = "Key"
-    message = "Plaintext"
+def encode():
     S = ksa(key2ascii(key))
     K = iter(prga(message, S))
     ciphertext = ["%02X" % (ord(c) ^ next(K)) for c in message]
-    print(''.join(ciphertext))
+    
+    return ciphertext
 
 if __name__ == '__main__':
     run()
