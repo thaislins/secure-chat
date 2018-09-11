@@ -5,8 +5,9 @@ from threading import Thread
 import tkinter as tk
 from tkinter import messagebox
 import s_des
+import rc4
 
-type_cryptography = s_des
+type_cryptography = rc4
 
 def receive():
     """Handles receiving of messages."""

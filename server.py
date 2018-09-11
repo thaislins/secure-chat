@@ -52,8 +52,14 @@ def broadcast(msg, prefix=""):  # prefix is for name identification.
     for c in clients:
         c.send(bytes(type_cryptography.encode(prefix + str(msg)), "utf8"))
 
+def crypt_type(type):
+    global type_cryptography
+    type_cryptography = rc4 if sys.argv[1] == 'rc4' else s_des
+
 def run():
     if len(sys.argv) == 2 and (sys.argv[1] == 'rc4' or sys.argv[1] == 's_des'):
+        crypt_type(sys.argv[1])
+        print(type_cryptography)
         server.bind(server_address)
         print('starting up on%s port %s' % server_address)
         server.listen(2)
