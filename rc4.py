@@ -1,5 +1,6 @@
-key = "Key"
-message = "Plaintext"
+import binascii
+
+key = 'Key'
 
 def ksa(key):
     S = [i for i in range(256)]
@@ -27,15 +28,24 @@ def prga(message, S):
 def key2ascii(char):
     return [ord(c) for c in char]
 
-def ascii2result(char):
-    return [chr(c) for c in char]
+def convert_chipertext(ciphertext):
+    return [ord(str(ch)) for ch in ciphertext]
 
-def encode():
+def define_key(k):
+    global key 
+    key = k
+
+def encode(message):
     S = ksa(key2ascii(key))
     K = iter(prga(message, S))
     ciphertext = ["%02X" % (ord(c) ^ next(K)) for c in message]
     
-    return ciphertext
+    return ''.join(ciphertext)
 
-if __name__ == '__main__':
-    run()
+def decode(ciphertext):
+    ciphertext = binascii.unhexlify(ciphertext)
+    S = ksa(key2ascii(key))
+    K = iter(prga(ciphertext, S))
+    plaintext = [chr(c ^ next(K)) for c in ciphertext]
+    
+    return ''.join(plaintext)
