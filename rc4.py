@@ -36,7 +36,7 @@ class RC4:
         self.key = k
 
     def encode(self, message):
-        S = self.ksa(self.key2ascii(key))
+        S = self.ksa(self.key2ascii(self.key))
         K = iter(self.prga(message, S))
         ciphertext = ["%02X" % (ord(c) ^ next(K)) for c in message]
         
@@ -44,7 +44,7 @@ class RC4:
 
     def decode(self, ciphertext):
         ciphertext = bytes.fromhex(ciphertext)
-        S = self.ksa(self.key2ascii(key))
+        S = self.ksa(self.key2ascii(self.key))
         K = iter(self.prga(ciphertext, S))
         plaintext = [chr(c ^ next(K)) for c in ciphertext]
         
