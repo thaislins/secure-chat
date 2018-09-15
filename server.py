@@ -3,6 +3,7 @@ from threading import Thread
 import sys
 import rc4
 import s_des
+from args import args_parser
 
 clients = {}
 addresses = {}
@@ -63,14 +64,14 @@ def remove_client(client, name):
     print("%s:%s has disconnected." % addresses[client])
     client.close()
 
-def broadcast(msg, name=""):  
+def broadcast(msg, name=""):
     """Broadcasts a message to all the clients."""
     message = msg if msg in [rc4_msg, sdes_msg] else type_crypt.encode(name + str(msg))
     for c in clients:
         c.send(bytes((message), "utf8"))
 
 def modify_key(k):
-    global key 
+    global key
     key = k
     type_crypt.define_key(key)
 
@@ -81,23 +82,22 @@ def crypt_type(name):
     type_crypt = rc4.RC4() if name == 'rc4' else s_des.SDES()
     if key != '': type_crypt.define_key(key)
 
-def run():
-    if len(sys.argv) == 3 and (sys.argv[1] == 'rc4' or sys.argv[1] == 's_des'):
-        crypt_type(sys.argv[1])
-        modify_key(sys.argv[2])
-        server.bind(server_address)
-        print('starting up on%s port %s' % server_address)
-        server.listen(5)
-        print("Waiting for connection...")
-        accept_thread = Thread(target=accept_connections)
-        accept_thread.start()
-        accept_thread.join()
-        server.close()
-    else:
-        print('Missing Arguments or Wrong Input! Input type is:')
-        print('server.py #algorithm_name')
-        print('Options for algorithm_name include:')
-        print('1. rc4      2. s_des')
+def run(args):
+    # Parse CLI arguments
+    args = args_parser(args)
+    arg_alg = args.algorithm
+    arg_key = args.key
+
+    crypt_type(arg_alg)
+    modify_key(arg_key)
+    server.bind(server_address)
+    print('starting up on%s port %s' % server_address)
+    server.listen(5)
+    print("Waiting for connection...")
+    accept_thread = Thread(target=accept_connections)
+    accept_thread.start()
+    accept_thread.join()
+    server.close()
 
 if __name__ == "__main__":
-    run()
+    run(sys.argv[1:])
