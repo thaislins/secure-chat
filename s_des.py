@@ -56,6 +56,7 @@ class SDES:
         return message_result
 
     def define_key(self, key):
+        key = self.string2bits(key)
         ip_result = self.permutation(key, self.p10)
         ls1 = self.rotate(ip_result[:5]) + self.rotate(ip_result[5:])
         ls2 = self.rotate(self.rotate(ls1[:5])) + self.rotate(self.rotate(ls1[5:]))
@@ -75,5 +76,7 @@ class SDES:
         return self.execute(message, self.k1, self.k2)
 
     def decode(self, message):
-        return self.bits2string(self.execute(self.bits2string(message), self.k2, self.k1)) 
+        return self.bits2string(self.execute(self.bits2string(message), self.k2, self.k1))
+
+
 
