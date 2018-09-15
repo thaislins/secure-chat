@@ -1,82 +1,79 @@
-ip = [2, 6, 3, 1, 4, 8, 5, 7]
-ip_1 = [4, 1, 3, 5, 7, 2, 8, 6]
-ep = [4, 1, 2, 3, 2, 3, 4, 1]
-p4 = [2, 4, 3, 1]
-p10 = [3, 5, 2, 7, 4, 10, 1, 9, 8, 6]
-p8 = [6, 3, 7, 4, 8, 5, 10, 9]
-tableS0 = [[1, 0, 3, 2], [3, 2, 1, 0], [0, 2, 1, 3], [3, 1, 3, 2]]
-tableS1 = [[1, 1, 2, 3], [2, 0, 1, 3], [3, 0, 1, 0], [2, 1, 0, 3]]
-k1 = '10100100'
-k2 = '01000011'
+class SDES:
+    def __init__(self):
+        self.ip = [2, 6, 3, 1, 4, 8, 5, 7]
+        self.ip_1 = [4, 1, 3, 5, 7, 2, 8, 6]
+        self.ep = [4, 1, 2, 3, 2, 3, 4, 1]
+        self.p4 = [2, 4, 3, 1]
+        self.p10 = [3, 5, 2, 7, 4, 10, 1, 9, 8, 6]
+        self.p8 = [6, 3, 7, 4, 8, 5, 10, 9]
+        self.tableS0 = [[1, 0, 3, 2], [3, 2, 1, 0], [0, 2, 1, 3], [3, 1, 3, 2]]
+        self.tableS1 = [[1, 1, 2, 3], [2, 0, 1, 3], [3, 0, 1, 0], [2, 1, 0, 3]]
+        self.k1 = ''
+        self.k2 = ''
 
-def permutation(bits, permutation):
-    result = [bits[permutation[i] - 1] for i in range(len(permutation))]
-    return ''.join(result)
+    def permutation(self, bits, permutation):
+        result = [bits[permutation[i] - 1] for i in range(len(permutation))]
+        return ''.join(result)
 
-def xor(bits, key):
-    result = [str(int(bits [i]) ^ int(key[i])) for i in range(len(key))]
-    return ''.join(result)
+    def xor(self, bits, key):
+        result = [str(int(bits [i]) ^ int(key[i])) for i in range(len(key))]
+        return ''.join(result)
 
-def sbox(bits, table):
-    [i, j] = [int(bits[ii] + bits[3 - ii], 2) for ii in range(2)]
-    return bin(table[i][j])[2:].zfill(2)
+    def sbox(self, bits, table):
+        [i, j] = [int(bits[ii] + bits[3 - ii], 2) for ii in range(2)]
+        return bin(table[i][j])[2:].zfill(2)
 
-def rotate(bits):
-    rot = [bits[i + 1] if i != len(bits) - 1 else str(bits[0]) for i in range(len(bits))]
-    return ''.join(rot)
+    def rotate(self, bits):
+        rot = [bits[i + 1] if i != len(bits) - 1 else str(bits[0]) for i in range(len(bits))]
+        return ''.join(rot)
 
-def switch(left_bits, right_bits):
-    return right_bits + left_bits
+    def switch(self, left_bits, right_bits):
+        return right_bits + left_bits
 
-def fk(left_bits, right_bits, key):
-    ep_result = permutation(right_bits, ep)
-    xor_result = xor(ep_result,key)
-    left, right = sbox(xor_result[:4],tableS0), sbox(xor_result[4:],tableS1)
-    p4_result = permutation(left + right, p4)
-    left_bits = xor(p4_result, left_bits)
-    
-    return left_bits
+    def fk(self, left_bits, right_bits, key):
+        ep_result = self.permutation(right_bits, self.ep)
+        xor_result = self.xor(ep_result,key)
+        left, right = self.sbox(xor_result[:4],self.tableS0), self.sbox(xor_result[4:],self.tableS1)
+        p4_result = self.permutation(left + right, self.p4)
+        left_bits = self.xor(p4_result, left_bits)
+        
+        return left_bits
 
-def execute(message, key1, key2): 
-    message_result = ''
+    def execute(self, message, key1, key2): 
+        message_result = ''
 
-    for i in message:
-        char = char2bits(i)
-        ip_result = permutation(char, ip)
-        left_bits, right_bits = ip_result[:4], ip_result[4:]
-        left_bits = fk(left_bits,right_bits,key1)
-        switch_result = switch(left_bits,right_bits)
-        #-------------------------------------------------------
-        left_bits = fk(switch_result[:4],switch_result[4:],key2)
-        bits = left_bits + switch_result[4:]
-        message_result += permutation(bits,ip_1)
+        for i in message:
+            char = self.char2bits(i)
+            ip_result = self.permutation(char, self.ip)
+            left_bits, right_bits = ip_result[:4], ip_result[4:]
+            left_bits = self.fk(left_bits,right_bits,key1)
+            switch_result = self.switch(left_bits,right_bits)
+            #-------------------------------------------------------
+            left_bits = self.fk(switch_result[:4],switch_result[4:],key2)
+            bits = left_bits + switch_result[4:]
+            message_result += self.permutation(bits, self.ip_1)
 
-    return message_result
+        return message_result
 
-def generate_keys(key):
-    ip_result = permutation(key, p10)
-    ls1 = rotate(ip_result[:5]) + rotate(ip_result[5:])
-    ls2 = rotate(rotate(ls1[:5])) + rotate(rotate(ls1[5:]))
+    def define_key(self, key):
+        ip_result = self.permutation(key, self.p10)
+        ls1 = self.rotate(ip_result[:5]) + self.rotate(ip_result[5:])
+        ls2 = self.rotate(self.rotate(ls1[:5])) + self.rotate(self.rotate(ls1[5:]))
 
-    return permutation(ls1,p8), permutation(ls2,p8)
+        self.k1, self.k2 = self.permutation(ls1,self.p8), self.permutation(ls2,self.p8)
 
-def char2bits(s=''):
-    return bin(ord(s))[2:].zfill(8)
+    def char2bits(self, s=''):
+        return bin(ord(s))[2:].zfill(8)
 
-def bits2string(b):
-    return ''.join([chr(int(b[i*8:(i*8)+8], 2)) for i in range(len(b)//8)])
+    def string2bits(self, s=''):
+        return ''.join([bin(ord(x))[2:].zfill(8) for x in s])
 
-def encode(message):
-    return execute(message, k1, k2)
+    def bits2string(self, b):
+        return ''.join([chr(int(b[i*8:(i*8)+8], 2)) for i in range(len(b)//8)])
 
-def decode(message):
-    return bits2string(execute(bits2string(message), k2, k1))
+    def encode(self, message):
+        return self.execute(message, self.k1, self.k2)
 
-def run():
-    message = "Hello, how are you?"
-    encrypted_message = encode(message,k1,k2)
-    decrypted_message = bits2string(decode(encrypted_message,k2,k1))
-
-if __name__ == '__main__':
-    run()
+    def decode(self, message):
+        return self.bits2string(self.execute(self.bits2string(message), self.k2, self.k1)) 
 
