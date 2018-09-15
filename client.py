@@ -2,8 +2,7 @@ import socket
 from threading import Thread
 import tkinter as tk
 from tkinter import messagebox
-import s_des
-import rc4
+from ..cryptography import rc4, s_des
 
 name_cryptography = ''
 type_crypt = None
@@ -67,7 +66,7 @@ def on_closing(event=None):
         send()
 
 def modify_key(k):
-    global key 
+    global key
     key = k
     type_crypt.define_key(key)
 
@@ -78,7 +77,7 @@ def crypt_type(name):
     type_crypt = rc4.RC4() if name == 'rc4' else s_des.SDES()
     if key != '': type_crypt.define_key(key)
 
-def setup_tk():  
+def setup_tk():
     global top, scrollbar, msg_list, messages_frame
     top.title("Secure Chat")
 

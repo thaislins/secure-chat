@@ -1,9 +1,8 @@
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import sys
-import rc4
-import s_des
-from args import args_parser
+from cryptography import rc4, s_des
+from utils.args import args_parser
 
 clients = {}
 addresses = {}
