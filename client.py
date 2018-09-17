@@ -8,6 +8,7 @@ name_cryptography = ''
 bufsize = 1024
 type_crypt = None
 quit_msg, rc4_msg, sdes_msg = "{quit}", "{rc4}", "{s_des}"
+change_key_msg = '\changekey'
 key = ''
 client_address = (socket.gethostbyname(socket.gethostname()), 5354)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -24,7 +25,7 @@ def receive():
     """Handles receiving of messages."""
     # Receive cryptography name and the welcome message
     welcome_message = ""
-    for i in range(3):
+    for _ in range(3):
         msg = client_socket.recv(bufsize).decode("utf8")
         if msg in [rc4_msg, sdes_msg]:
             client_socket.send(b'ack')
@@ -43,6 +44,9 @@ def receive():
 
             if msg in [rc4_msg, sdes_msg]:
                 crypt_type(msg[1:-1])
+            elif msg.startswith(change_key_msg):
+                new_key = msg[len(change_key_msg):].strip()
+                modify_key(new_key)
             else:
                 msg = type_crypt.decode(msg)
                 msg_list.insert(tk.END, msg)
@@ -54,7 +58,7 @@ def send(event=None):  # event is passed by binders.
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
     message = type_crypt.encode(msg)
-    if msg in [rc4_msg, sdes_msg]:
+    if msg in [rc4_msg, sdes_msg] or msg.startswith(change_key_msg):
         client_socket.send(bytes(msg, "utf8"))
         client_socket.recv(3)
     elif nameMsg == True:

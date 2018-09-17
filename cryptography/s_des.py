@@ -12,6 +12,7 @@ class SDES:
         self.k2 = ''
 
     def permutation(self, bits, permutation):
+        bits = bits + ('0'*(len(permutation) - len(bits)))
         result = [bits[permutation[i] - 1] for i in range(len(permutation))]
         return ''.join(result)
 
@@ -36,10 +37,10 @@ class SDES:
         left, right = self.sbox(xor_result[:4],self.tableS0), self.sbox(xor_result[4:],self.tableS1)
         p4_result = self.permutation(left + right, self.p4)
         left_bits = self.xor(p4_result, left_bits)
-        
+
         return left_bits
 
-    def execute(self, message, key1, key2): 
+    def execute(self, message, key1, key2):
         message_result = ''
 
         for i in message:

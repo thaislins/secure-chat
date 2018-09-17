@@ -39,13 +39,17 @@ class RC4:
         S = self.ksa(self.key2ascii(self.key))
         K = iter(self.prga(message, S))
         ciphertext = ["%02X" % (ord(c) ^ next(K)) for c in message]
-        
+
         return ''.join(ciphertext)
 
     def decode(self, ciphertext):
-        ciphertext = bytes.fromhex(ciphertext)
-        S = self.ksa(self.key2ascii(self.key))
-        K = iter(self.prga(ciphertext, S))
-        plaintext = [chr(c ^ next(K)) for c in ciphertext]
-        
-        return ''.join(plaintext)
+        try:
+            ciphertext = bytes.fromhex(ciphertext)
+            S = self.ksa(self.key2ascii(self.key))
+            K = iter(self.prga(ciphertext, S))
+            plaintext = [chr(c ^ next(K)) for c in ciphertext]
+
+            return ''.join(plaintext)
+        except ValueError as e:
+            print(e)
+            return ''
