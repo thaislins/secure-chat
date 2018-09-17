@@ -23,7 +23,7 @@ def accept_connections():
         client.send(bytes('{' + name_cryptography + '}', "utf8")) # Sends cryptography type to client
         client.recv(3)
         client.send(bytes('key' + key, "utf8")) # Sends key value to client
-        client.send(bytes(type_crypt.encode("Type your name and press enter!"), "utf8"))
+        client.send(bytes(type_crypt.encrypt("Type your name and press enter!"), "utf8"))
         addresses[client] = client_address # Adds client and address to adresses dictionary
         Thread(target=handle_client, args=(client,)).start()
 
@@ -32,8 +32,8 @@ def handle_client(client):  # Takes client socket as argument.
     name = client.recv(bufsize).decode("utf8")
     client.send(bytes('{' + name_cryptography + '}', "utf8")) # Sends again in case type has changed after client connected
     welcome = 'Welcome %s! If you want to quit, type {quit} to exit.' % name
-    client.send(bytes(type_crypt.encode(welcome), "utf8"))
-    client.send(bytes(type_crypt.encode("This chat is encrypted with " + name_cryptography), "utf8"))
+    client.send(bytes(type_crypt.encrypt(welcome), "utf8"))
+    client.send(bytes(type_crypt.encrypt("This chat is encrypted with " + name_cryptography), "utf8"))
     join_chat = "%s has joined the chat!" % name
     broadcast(join_chat) # Broadcasts that client has joined the chat
     clients[client] = name
@@ -55,7 +55,7 @@ def handle_client(client):  # Takes client socket as argument.
                 broadcast("The key has been altered")
                 continue
 
-            msg = type_crypt.decode(msg_raw)
+            msg = type_crypt.decrypt(msg_raw)
             if msg == quit_msg: # Removes client when quit message is received
                 remove_client(client, name)
                 break
@@ -76,7 +76,7 @@ def remove_client(client, name):
 
 def broadcast(msg, name="", should_encrypt=True):
     """Broadcasts a message to all the clients."""
-    message = msg if not should_encrypt else type_crypt.encode(name + str(msg))
+    message = msg if not should_encrypt else type_crypt.encrypt(name + str(msg))
     for c in clients:
         c.send(bytes((message), "utf8"))
 
@@ -85,7 +85,6 @@ def modify_key(k):
     global key
     key = k
     type_crypt.define_key(key)
-    print('New key:', key)
 
 def crypt_type(name):
     """Defines the current cryptography used in the chat."""

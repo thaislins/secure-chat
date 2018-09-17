@@ -4,6 +4,7 @@ class RC4:
         self.key = ''
 
     def ksa(self, key):
+        '''Initialization and initial permutation of S'''
         S = list(range(256))
 
         j = 0
@@ -35,14 +36,14 @@ class RC4:
     def define_key(self, k):
         self.key = k
 
-    def encode(self, message):
+    def encrypt(self, message):
         S = self.ksa(self.key2ascii(self.key))
         K = iter(self.prga(message, S))
         ciphertext = ["%02X" % (ord(c) ^ next(K)) for c in message]
 
         return ''.join(ciphertext)
 
-    def decode(self, ciphertext):
+    def decrypt(self, ciphertext):
         try:
             ciphertext = bytes.fromhex(ciphertext)
             S = self.ksa(self.key2ascii(self.key))

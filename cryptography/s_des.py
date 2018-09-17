@@ -11,27 +11,33 @@ class SDES:
         self.k1 = ''
         self.k2 = ''
 
-    def permutation(self, bits, permutation):
-        bits = bits + ('0'*(len(permutation) - len(bits)))
+    def permutation(self, bits, permutation): 
+        '''Modifies position of bits according to permutation box used in input'''
         result = [bits[permutation[i] - 1] for i in range(len(permutation))]
         return ''.join(result)
 
     def xor(self, bits, key):
+        '''XOR operation between a defined amount of bits and the key'''
         result = [str(int(bits [i]) ^ int(key[i])) for i in range(len(key))]
         return ''.join(result)
 
     def sbox(self, bits, table):
+        '''Substitution box for modifying a defined amount of bits'''
         [i, j] = [int(bits[ii] + bits[3 - ii], 2) for ii in range(2)]
         return bin(table[i][j])[2:].zfill(2)
 
     def rotate(self, bits):
+        '''Rotates position of bits'''
         rot = [bits[i + 1] if i != len(bits) - 1 else str(bits[0]) for i in range(len(bits))]
         return ''.join(rot)
 
     def switch(self, left_bits, right_bits):
+        '''Switches left bits with right bits'''
         return right_bits + left_bits
 
     def fk(self, left_bits, right_bits, key):
+        '''Complex function that performs a series of operations, such as 
+        permutations, xor, sbox and switches'''
         ep_result = self.permutation(right_bits, self.ep)
         xor_result = self.xor(ep_result,key)
         left, right = self.sbox(xor_result[:4],self.tableS0), self.sbox(xor_result[4:],self.tableS1)
@@ -40,7 +46,9 @@ class SDES:
 
         return left_bits
 
-    def execute(self, message, key1, key2):
+    def execute(self, message, key1, key2): 
+        '''Executes steps in S-DES algorithm, can be used to encrypt or 
+        decrypt based on the order of keys passed as arguments'''
         message_result = ''
 
         for i in message:
@@ -57,6 +65,8 @@ class SDES:
         return message_result
 
     def define_key(self, key):
+        '''Generates two keys from a 10-bit key, by doing permutations and 
+        rotations on the bits'''
         key = self.string2bits(key)
         ip_result = self.permutation(key, self.p10)
         ls1 = self.rotate(ip_result[:5]) + self.rotate(ip_result[5:])
@@ -65,18 +75,23 @@ class SDES:
         self.k1, self.k2 = self.permutation(ls1,self.p8), self.permutation(ls2,self.p8)
 
     def char2bits(self, s=''):
+        '''Returns 8-bit sequence of a char'''
         return bin(ord(s))[2:].zfill(8)
 
     def string2bits(self, s=''):
+        '''Transforms a string into a series of bits'''
         return ''.join([bin(ord(x))[2:].zfill(8) for x in s])
 
     def bits2string(self, b):
+        '''Transforms bits into a string of plaintext'''
         return ''.join([chr(int(b[i*8:(i*8)+8], 2)) for i in range(len(b)//8)])
 
-    def encode(self, message):
+    def encrypt(self, message):
+        '''Executes the encryption of a message, which uses the keys in its normal order'''
         return self.execute(message, self.k1, self.k2)
 
-    def decode(self, message):
+    def decrypt(self, message):
+        '''Executes the decryption of a message, which uses the keys in its reverse order'''
         return self.bits2string(self.execute(self.bits2string(message), self.k2, self.k1))
 
 

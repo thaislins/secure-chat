@@ -35,7 +35,7 @@ def receive():
         else:
             welcome_message = msg
             name_message(True)
-    welcome_message = type_crypt.decode(welcome_message)
+    welcome_message = type_crypt.decrypt(welcome_message)
     msg_list.insert(tk.END, welcome_message)
 
     while True:
@@ -48,7 +48,7 @@ def receive():
                 new_key = msg[len(change_key_msg):].strip()
                 modify_key(new_key)
             else:
-                msg = type_crypt.decode(msg)
+                msg = type_crypt.decrypt(msg)
                 msg_list.insert(tk.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
@@ -57,7 +57,7 @@ def send(event=None):  # event is passed by binders.
     """Handles sending of messages."""
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
-    message = type_crypt.encode(msg)
+    message = type_crypt.encrypt(msg)
     if msg in [rc4_msg, sdes_msg] or msg.startswith(change_key_msg):
         client_socket.send(bytes(msg, "utf8"))
         client_socket.recv(3)
@@ -114,12 +114,14 @@ def setup_tk():
     crytography_text = tk.Label(top, text="Instructions")
     crytography_text.grid(row=1, column=10, padx=10)
 
-    label1 = tk.Label(top, text="{quit} - Quit Program")
-    label1.grid(row=2, column=10)
-    label2 = tk.Label(top, text="{rc4} - Modify encryption algorithm to RC4")
-    label2.grid(row=3, column=10)
-    label3 = tk.Label(top, text="{s_des} - Modify encryption algorithm to S-DES")
-    label3.grid(row=4, column=10, padx=7)
+    label_quit = tk.Label(top, text="{quit} - Quit Program")
+    label_quit.grid(row=2, column=10)
+    label_rc4 = tk.Label(top, text="{rc4} - Modify encryption algorithm to RC4")
+    label_rc4.grid(row=3, column=10)
+    label_sdes = tk.Label(top, text="{s_des} - Modify encryption algorithm to S-DES")
+    label_sdes.grid(row=4, column=10, padx=15)
+    label_key = tk.Label(top, text="\changekey <key> - Define a new key")
+    label_key.grid(row=5, column=10)
 
     top.protocol("WM_DELETE_WINDOW", on_closing)
 
