@@ -4,15 +4,16 @@ import tkinter as tk
 from tkinter import messagebox
 from cryptography import rc4, s_des
 
+QUIT_MSG, RC4_MSG, SDES_MSG = "\\quit", "\\rc4", "\\s_des"
+KEY_MSG = '\\changekey'
+NAME_MSG = True # Used to determine wether the message the client is sending is his name
+BUFSIZ = 1024
+ACK = b'msg'
 name_cryptography = ''
-bufsize = 1024
 type_crypt = None
-quit_msg, rc4_msg, sdes_msg = "{quit}", "{rc4}", "{s_des}"
-change_key_msg = '\changekey'
 key = ''
 client_address = (socket.gethostbyname(socket.gethostname()), 5354)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-nameMsg = True
 
 #tkinter variables
 top = tk.Tk()
@@ -26,10 +27,10 @@ def receive():
     # Receive cryptography name and the welcome message
     welcome_message = ""
     for _ in range(3):
-        msg = client_socket.recv(bufsize).decode("utf8")
-        if msg in [rc4_msg, sdes_msg]:
-            client_socket.send(b'ack')
-            crypt_type(msg[1:-1])
+        msg = client_socket.recv(BUFSIZ).decode("utf8")
+        if msg in [RC4_MSG, SDES_MSG]:
+            client_socket.send(ACK)
+            crypt_type(msg[1:])
         elif msg[:3] == "key":
             modify_key(msg[3:])
         else:
@@ -40,12 +41,12 @@ def receive():
 
     while True:
         try:
-            msg = client_socket.recv(bufsize).decode("utf8")
+            msg = client_socket.recv(BUFSIZ).decode("utf8")
 
-            if msg in [rc4_msg, sdes_msg]:
-                crypt_type(msg[1:-1])
-            elif msg.startswith(change_key_msg):
-                new_key = msg[len(change_key_msg):].strip()
+            if msg in [RC4_MSG, SDES_MSG]:
+                crypt_type(msg[1:])
+            elif msg.startswith(KEY_MSG):
+                new_key = msg[len(KEY_MSG):].strip()
                 modify_key(new_key)
             else:
                 msg = type_crypt.decrypt(msg)
@@ -58,13 +59,13 @@ def send(event=None):  # event is passed by binders.
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
     message = type_crypt.encrypt(msg)
-    if msg in [rc4_msg, sdes_msg] or msg.startswith(change_key_msg):
+    if msg in [RC4_MSG, SDES_MSG] or msg.startswith(KEY_MSG):
         client_socket.send(bytes(msg, "utf8"))
         client_socket.recv(3)
-    elif nameMsg == True:
+    elif NAME_MSG == True:
         client_socket.send(bytes(msg, "utf8"))
         name_message(False)
-    elif msg == quit_msg:
+    elif msg == QUIT_MSG:
         client_socket.send(bytes(message,"utf8"))
         client_socket.close()
         top.quit()
@@ -72,13 +73,14 @@ def send(event=None):  # event is passed by binders.
         client_socket.send(bytes(message,"utf8"))
 
 def name_message(msg):
-    global nameMsg
-    nameMsg = msg
+    '''Modifies variable name_msg'''
+    global NAME_MSG
+    NAME_MSG = msg
 
 def on_closing(event=None):
     """This function is called when the window is closed."""
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
-        my_msg.set(quit_msg)
+        my_msg.set(QUIT_MSG)
         send()
 
 def modify_key(k):
@@ -114,13 +116,13 @@ def setup_tk():
     crytography_text = tk.Label(top, text="Instructions")
     crytography_text.grid(row=1, column=10, padx=10)
 
-    label_quit = tk.Label(top, text="{quit} - Quit Program")
+    label_quit = tk.Label(top, text="\\quit - Quit Program")
     label_quit.grid(row=2, column=10)
-    label_rc4 = tk.Label(top, text="{rc4} - Modify encryption algorithm to RC4")
+    label_rc4 = tk.Label(top, text="\\rc4 - Modify encryption algorithm to RC4")
     label_rc4.grid(row=3, column=10)
-    label_sdes = tk.Label(top, text="{s_des} - Modify encryption algorithm to S-DES")
+    label_sdes = tk.Label(top, text="\\s_des - Modify encryption algorithm to S-DES")
     label_sdes.grid(row=4, column=10, padx=15)
-    label_key = tk.Label(top, text="\changekey <key> - Define a new key")
+    label_key = tk.Label(top, text="\\changekey <key> - Define a new key")
     label_key.grid(row=5, column=10)
 
     top.protocol("WM_DELETE_WINDOW", on_closing)

@@ -3,7 +3,7 @@ class RC4:
     def __init__(self):
         self.key = ''
 
-    def ksa(self, key):
+    def ksa(self, key): # Key Scheduling Algorithm
         '''Initialization and initial permutation of S'''
         S = list(range(256))
 
@@ -14,7 +14,8 @@ class RC4:
 
         return S
 
-    def prga(self, message, S):
+    def prga(self, message, S): # Pseudo-Random Generation Algorithm 
+        '''Generates a keystream by going through all elements of S and swapping them'''
         i = 0
         j = 0
         K = []
@@ -28,15 +29,15 @@ class RC4:
         return K
 
     def key2ascii(self, char):
+        ''''Transforms a string into an array of ascii code'''
         return [ord(c) for c in char]
 
-    def convert_chipertext(self, ciphertext):
-        return [ord(str(ch)) for ch in ciphertext]
-
     def define_key(self, k):
+        '''Defines or modifies global variable 'key'''
         self.key = k
 
     def encrypt(self, message):
+        '''Encrypts plaintext by doing a XOR operation with the generated keystream'''
         S = self.ksa(self.key2ascii(self.key))
         K = iter(self.prga(message, S))
         ciphertext = ["%02X" % (ord(c) ^ next(K)) for c in message]
@@ -44,6 +45,7 @@ class RC4:
         return ''.join(ciphertext)
 
     def decrypt(self, ciphertext):
+        '''Decrypts ciphertext by doing a XOR operation with the generated keystream'''
         try:
             ciphertext = bytes.fromhex(ciphertext)
             S = self.ksa(self.key2ascii(self.key))

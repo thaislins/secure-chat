@@ -4,12 +4,13 @@ import sys
 from cryptography import rc4, s_des
 from utils.args import args_parser
 
+QUIT_MSG, RC4_MSG, SDES_MSG = "\\quit", "\\rc4", "\\s_des"
+KEY_MSG = '\\changekey'
+BUFSIZE = 1024
+ACK = b'msg'
 clients = {}
 addresses = {}
-bufsize = 1024
 server_address = ('', 5354) # adress including host and port
-quit_msg, rc4_msg, sdes_msg = "{quit}", "{rc4}", "{s_des}"
-change_key_msg = '\changekey'
 server = socket(AF_INET, SOCK_STREAM)
 type_crypt = None
 name_cryptography = ''
@@ -20,7 +21,7 @@ def accept_connections():
     while True:
         client, client_address = server.accept()
         print("%s:%s has connected." % client_address)
-        client.send(bytes('{' + name_cryptography + '}', "utf8")) # Sends cryptography type to client
+        client.send(bytes('\\' + name_cryptography, "utf8")) # Sends cryptography type to client
         client.recv(3)
         client.send(bytes('key' + key, "utf8")) # Sends key value to client
         client.send(bytes(type_crypt.encrypt("Type your name and press enter!"), "utf8"))
@@ -29,9 +30,9 @@ def accept_connections():
 
 def handle_client(client):  # Takes client socket as argument.
     """Handles client connection by getting a name and storing it in the clients dictionary."""
-    name = client.recv(bufsize).decode("utf8")
-    client.send(bytes('{' + name_cryptography + '}', "utf8")) # Sends again in case type has changed after client connected
-    welcome = 'Welcome %s! If you want to quit, type {quit} to exit.' % name
+    name = client.recv(BUFSIZE).decode("utf8")
+    client.send(bytes('\\' + name_cryptography, "utf8")) # Sends again in case type has changed after client connected
+    welcome = 'Welcome %s! If you want to quit, type \\quit to exit.' % name
     client.send(bytes(type_crypt.encrypt(welcome), "utf8"))
     client.send(bytes(type_crypt.encrypt("This chat is encrypted with " + name_cryptography), "utf8"))
     join_chat = "%s has joined the chat!" % name
@@ -40,23 +41,23 @@ def handle_client(client):  # Takes client socket as argument.
 
     while True:
         try:
-            msg_raw = client.recv(bufsize).decode("utf8")
-            if msg_raw in [rc4_msg, sdes_msg]: # Changes cryptography type in chat
-                client.send(b'ack')
-                crypt_type(msg_raw[1:-1])
+            msg_raw = client.recv(BUFSIZE).decode("utf8")
+            if msg_raw in [RC4_MSG, SDES_MSG]: # Changes cryptography type in chat
+                client.send(ACK)
+                crypt_type(msg_raw[1:])
                 broadcast(msg_raw, should_encrypt=False)
                 broadcast("This chat is encrypted with " + name_cryptography)
                 continue
-            elif msg_raw.startswith(change_key_msg):
-                client.send(b'ack')
-                new_key = msg_raw[len(change_key_msg):].strip()
+            elif msg_raw.startswith(KEY_MSG): # Changes key value in chat
+                client.send(ACK)
+                new_key = msg_raw[len(KEY_MSG):].strip()
                 broadcast(msg_raw, should_encrypt=False)
                 modify_key(new_key)
                 broadcast("The key has been altered")
                 continue
 
             msg = type_crypt.decrypt(msg_raw)
-            if msg == quit_msg: # Removes client when quit message is received
+            if msg == QUIT_MSG: # Removes client when quit message is received
                 remove_client(client, name)
                 break
             elif msg != '':
@@ -102,11 +103,11 @@ def run(args):
 
     crypt_type(arg_alg)
     modify_key(arg_key)
-    server.bind(server_address)
-    print('starting up on%s port %s' % server_address)
+    server.bind(server_address) # Binds socket to address
+    print('starting up on%s port %s' % server_address) 
     server.listen(32) # Listens for incoming connections
     print("Waiting for connection...")
-    accept_thread = Thread(target=accept_connections)
+    accept_thread = Thread(target=accept_connections) 
     accept_thread.start()
     accept_thread.join()
     server.close()
